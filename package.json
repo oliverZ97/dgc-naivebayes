@@ -1,0 +1,15 @@
+{
+  "name": "dgcnaivebayes",
+  "version": "1.0.0",
+  "description": "",
+  "main": "naive-bayes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bayes": "0.0.7",
+    "fs": "0.0.1-security"
+  }
+}
