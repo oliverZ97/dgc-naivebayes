@@ -1,25 +1,63 @@
-var bayes = require('bayes');
-var bayesClass = bayes();
 const fs = require("fs");
 const striphtml = require("string-strip-html")
+var bayes = require('bayes');
+var bayesClass = bayes();
 var documents = []
 
-//csv => articleid, realCat, computedCat, Match
+function startClassifier() {
+    let option = process.argv[2];
+    if(option) {
+        console.log("Start classifying the Testset!")
+        classifyTestSet()
+    } else {
+        console.log("Start train the Model with Articles and create a Testset")
+        parseJSONFile()
+    }
+}
+
+function classifyTestSet() {
+    let model = fs.readFileSync("./model.json");
+    bayesClass = bayes.fromJson(model);
+    let testSet = JSON.parse(fs.readFileSync("./testset.json"))
+    let resultData = []
+    testSet.forEach((article) => {
+        if(article.content === undefined) {
+            console.log("undefined text at article " + article.externalId);
+        } else {
+            let strippedText = striphtml(article.content);
+            let result = bayesClass.categorize(strippedText);
+            let correct = false;
+            if(result === article.category) {
+                correct = true;
+            }
+            let resultString = article.externalId + "," + article.category + "," + result + "," + correct;
+            resultData.push(resultString);
+        }
+    })
+    writeResultDataToCSV(resultData);
+}
+
+function writeResultDataToCSV(resultData){
+    let csv = "";
+    resultData.forEach((elem) => {
+        csv += elem + "\n"
+    })
+    fs.writeFileSync("./resultData.csv", csv);
+    console.log("Successfully write results in resultData.csv!")
+}
 
 function parseJSONFile() {
     let filedir = fs.readdirSync("./data");
     filedir.forEach((file) => {
         let filestring = fs.readFileSync("./data/" + file);
         let fileobj = JSON.parse(filestring);
-        //console.log(fileobj);
         let docs = extractDocuments(fileobj);
         docs.forEach((elem) => {
             documents.push(elem);
         })
     })
-    console.log(documents.length)
     removeTestData();
-    //saveModel()
+    teachModel();
 }
 
 function extractDocuments(jsonobj) {
@@ -36,36 +74,29 @@ function removeTestData() {
     let set_three = documents.splice((length/4)*2, nrOfCategory)
     let set_four = documents.splice((length/4)*3, nrOfCategory)
     let testData = set_one.concat(set_two).concat(set_three).concat(set_four);
-    console.log(testData.length);
     writeTestDataToFile(testData)
 }
 
 function writeTestDataToFile(testData) {
-    //data is an array
-    let testdata = {
-        documents: []
-    }
     let data = JSON.stringify(testData);
-    let postfix = getDateForFilename();
-    fs.writeFileSync("./testset" + postfix + ".json", data)
-    
+    fs.writeFileSync("./testset.json", data)
 }
 
-function teachModel(text, category) {
-    bayesClass.learn(text, category);
+function teachModel() {
+    documents.forEach((article) => {
+        if(article.content === undefined) {
+            console.log("undefined text at article " + article.externalId)
+        } else {
+            let strippedText = striphtml(article.content);
+            bayesClass.learn(strippedText, article.category);
+        }
+    })
+    saveModel()
 }
 
 function saveModel() {
     var model = bayesClass.toJson();
-    console.log()
+    fs.writeFileSync("./model.json", model)
 }
 
-function getDateForFilename() {
-    var today = new Date();
-    var date = today.getFullYear()+''+(today.getMonth()+1)+''+today.getDate();
-    var time = today.getHours() + "" + today.getMinutes() + "" + today.getSeconds();
-    var dateTime = date+time;
-    console.log(dateTime)
-    return dateTime
-}
-parseJSONFile()
+startClassifier();
