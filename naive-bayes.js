@@ -18,7 +18,7 @@ function startClassifier() {
 function classifyTestSet() {
     let model = fs.readFileSync("./model.json");
     bayesClass = bayes.fromJson(model);
-    let testSet = JSON.parse(fs.readFileSync("./testset.json"))
+    let testSet = JSON.parse(fs.readFileSync("../results/testset.json"))
     let resultData = []
     testSet.forEach((article) => {
         if(article.content === undefined) {
@@ -42,14 +42,14 @@ function writeResultDataToCSV(resultData){
     resultData.forEach((elem) => {
         csv += elem + "\n"
     })
-    fs.writeFileSync("./resultData.csv", csv);
+    fs.writeFileSync("../results/nb_resultData.csv", csv);
     console.log("Successfully write results in resultData.csv!")
 }
 
 function parseJSONFile() {
-    let filedir = fs.readdirSync("./data");
+    let filedir = fs.readdirSync("../data");
     filedir.forEach((file) => {
-        let filestring = fs.readFileSync("./data/" + file);
+        let filestring = fs.readFileSync("../data/" + file);
         let fileobj = JSON.parse(filestring);
         let docs = extractDocuments(fileobj);
         docs.forEach((elem) => {
@@ -57,6 +57,7 @@ function parseJSONFile() {
         })
     })
     removeTestData();
+    writeTrainingDataToFile();
     teachModel();
 }
 
@@ -79,7 +80,12 @@ function removeTestData() {
 
 function writeTestDataToFile(testData) {
     let data = JSON.stringify(testData);
-    fs.writeFileSync("./testset.json", data)
+    fs.writeFileSync("../results/testset.json", data)
+}
+
+function writeTrainingDataToFile() {
+    let data = JSON.stringify(documents);
+    fs.writeFileSync("../results/trainingset.json", data)
 }
 
 function teachModel() {
