@@ -58,7 +58,7 @@ function parseJSONFile() {
     })
     removeTestData();
     writeTrainingDataToFile();
-    teachModel();
+    //teachModel();
 }
 
 function extractDocuments(jsonobj) {
