@@ -11,7 +11,7 @@ You can choose between train a model with data or classify articles with the mod
 
 To classify a testset you need to run the training function at least one time. Otherwise you dont have a testset to classify nor a model to classify with.
 
-To train the model type "npm start false"
+To train the model type "npm start"
 To classify a testset type "npm start true"
 
 Hope you have fun!
